@@ -1,0 +1,8 @@
+{
+	"voltage_low": 0.3,
+	"voltage_high": 0.7,
+	"capacity": 0.5,
+	"charge": 0.5,
+	"temperature_low": 5,
+	"temperature_high": 45
+}

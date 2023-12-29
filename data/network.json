@@ -1,0 +1,13 @@
+{
+	"mdns": "rscpi",
+	"type": "static",
+	"static": {
+		"ip": "192.168.0.5",
+		"mask": "255.255.255.0",
+		"gateway": "192.168.0.1",
+		"sntp": [
+			"1.1.1.1",
+			"sntp.local"
+		]
+	}
+}
