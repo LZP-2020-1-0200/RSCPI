@@ -79,16 +79,6 @@ void setup() {
   gauge.startMeasurement();
   Serial.flush();
   Serial.swap();
-  /*
-  delay(1000);
-  Serial.write("\n");
-  Serial.flush();
-  delay(1000);
-  Serial.write("*RST;*CLS\n");
-  Serial.flush();
-  delay(1000);
-  Serial.write("SYSTEM:REMOTE\n");
-  delay(1000);*/
 }
 void loop() {
   

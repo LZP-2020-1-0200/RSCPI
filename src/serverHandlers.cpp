@@ -1,3 +1,9 @@
+/**
+ * @file serverHandlers.cpp
+ * @author Oskars Putans (o.putaans@gmail.com)
+ * @brief This file contains the functions for handling the webserver.
+ */
+
 #include "serverHandlers.h"
 ESP8266WebServer server(80);
 ESP8266WebServerSecure serverSecure(443);
@@ -6,7 +12,8 @@ extern Scheduler scheduler; // defined in ./main.cpp
 
 String acc="";
 
-
+/// @brief Function for handling the root path.
+/// @param server reference to the server.
 template <typename WSBase>
 void handleRoot(esp8266webserver::ESP8266WebServerTemplate<WSBase> &server) {
 	//Serial.println("Handling root");
@@ -17,12 +24,17 @@ void handleRoot(esp8266webserver::ESP8266WebServerTemplate<WSBase> &server) {
 	server.send(200, "text/plain", buffer);
 }
 
+/// @brief Function for handling the not found path.
 template <typename WSBase>
 void handleNotFound(esp8266webserver::ESP8266WebServerTemplate<WSBase> &server) {
 	//Serial.println("Handle not found");
 	server.send(404, "text/plain", "Not found");
 }
 
+/// @brief Function for handling the /exec path.
+/// @param server reference to the server.
+/// @details The /exec path is used to execute commands on the microcontroller.
+/// The command is sent to the microcontroller as a JSON object.
 template <typename WSBase>
 void handleExec(esp8266webserver::ESP8266WebServerTemplate<WSBase> &server) {
 	//Serial.println("Handle exec");
@@ -92,30 +104,10 @@ void handleExec(esp8266webserver::ESP8266WebServerTemplate<WSBase> &server) {
 	} else {
 		server.send(200, "text/plain", "");
 	}
-	/*
-	struct DATA {
-		String command;
-		bool expect_response;
-		esp8266webserver::ESP8266WebServerTemplate<WSBase> &server
-	};
-
-	scheduler.schedule<DATA>([](DataBuffer& dataBuf){
-		DATA& data = dataBuf.get<DATA>();
-		//Serial.swap();
-		Serial.print(data.command);
-		//Serial.swap();
-		if(data.expect_response) {
-			String response = Serial.readStringUntil('\n');
-			data.server.send(200, "text/plain", response);
-			data.server.
-		} else {
-			data.server.send(200, "text/plain", "");
-		}
-	}, 0, std::move(DATA{cmd, doc["expect_response"].as<bool>(), server}));
-	server.send(200, "text/plain", "Executed");
-	*/
+	
 }
 
+/// @brief Function for setting up the webserver.
 void serverSetup() {
 		
 	server.on("/", [](){
@@ -130,6 +122,10 @@ void serverSetup() {
 	server.on("/exec", [](){
 		//Serial.println("Handling exec from server");
 		handleExec(server);
+	});
+	serverSecure.on("/exec", [](){
+		//Serial.println("Handling exec from serverSecure");
+		handleExec(serverSecure);
 	});
 
 	server.on("/read", [](){
@@ -150,28 +146,6 @@ void serverSetup() {
 		handleNotFound(serverSecure);
 	});
 
-	server.on("/debug", HTTP_GET, []() {
-		Serial.setTimeout(1000);
-		Serial.write("*IDN?\n");
-	
-		delay(2000);
-		
-		char response[100];
-		int awaitCounter = 0;
-		while(!Serial.available() && awaitCounter++ < 10){
-			delay(1000);
-			acc.concat("Waiting for response\n");
-		}
-		if(awaitCounter >= 10) {
-			server.send(400, "text/plain", acc);
-			return;
-		}
-		Serial.readBytesUntil('\n', response, 100);
-		acc.concat(response);
-		if(acc.length()>800) acc=acc.substring(acc.length()-800);
-		delay(2000);
-		server.send(200, "text/plain", acc);
-	});
 
 	server.begin();
 	serverSecure.begin();

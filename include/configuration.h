@@ -1,6 +1,17 @@
+/**
+ * @file configuration.h
+ * This file contains the configuration file structures and functions.
+ * The configuration files are stored in the filesystem, and are loaded from there.
+ * The configuration files are used to configure the device.
+ * 
+ * This header file is microcontroller independent.
+ */
 
+#pragma once
 #include <ArduinoJson.h>
+#ifdef NATIVE_TEST
 #include <stdio.h>
+#endif
 
 /*
 Preset file format:

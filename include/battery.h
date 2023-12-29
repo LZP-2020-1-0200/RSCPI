@@ -1,9 +1,19 @@
+/**
+ * @file battery.h
+ * This file contains the Battery class, which is used to interface with the LTC2942 battery monitor IC.
+ * The class is used to read and write the battery state, and to configure the battery monitor.
+ * The class also contains functions to save and load the battery state to and from the filesystem.
+ */
+
 #include <LTC2942.h>
 #include "configuration.h"
 #include <ArduinoJson.h>
 #include "jsonStorage.h"
 #pragma once
 
+/**
+ * @brief The Battery class is used to interface with the LTC2942 battery monitor IC.
+*/
 class Battery {
 	LTC2942 ltc;
 	cfg::BatterySettings battery;

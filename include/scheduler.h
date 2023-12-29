@@ -1,3 +1,12 @@
+/**
+ * @file scheduler.h
+ * @author Oskars Putans (o.putaans@gmail.com)
+ * @brief This file contains the Scheduler class, which is used to schedule tasks.
+ * 
+ * This file depends on the Task class, which is defined in task.h.
+ * This file is microcontroller independent, so it can be used in a native environment for testing.
+ */
+
 
 #pragma once
 #include <utility>
@@ -14,18 +23,22 @@
 
 
 
-
-
+/// @brief General error codes for the scheduler.
 enum SCH_ERR {
 	SCH_ERR_NONE = 0b10000001,
 	SCH_ERR_BAD_TEARDOWN = 0b10000010,
 	SCH_ERR_BAD_TASK_HASH = 0b10000100,
 	SCH_ERR_TASK_ALREADY_KILLED = 0b10001000,
-	SCH_ERR_NO_SPACE = 0b10010000
-
+	SCH_ERR_NO_SPACE = 0b10010000,
+	SCH_ERR_UNRECOGNIZED_TASK_TYPE = 0b10100000
 };
 
+/// @brief The Scheduler class is used to schedule tasks.
+/// The Scheduler class is used to schedule tasks.
+/// The Scheduler class is microcontroller independent, so it can be used in a native environment.
 class Scheduler {
+private:
+	/// @brief The array of tasks.
 	Task taskList[SCHEDULER_SIZE];
 public:
 	Scheduler() {
@@ -35,12 +48,17 @@ public:
 		}
 	}
 
+	/// @brief Checks if the task should be run, and runs it if necessary.
+	/// @param time The current time.
+	/// @return Error code.
 	uint16_t update(unsigned long long time) {
 		uint16_t errCode = 0;
 		// check scheduled tasks
 		for(unsigned int i = 0; i < SCHEDULER_SIZE; i++) {
 			Task& task = taskList[i];
 			if (!task.isSet()) continue;
+
+			// Tasks to be run once
 			if (task.type == TaskType::Once) {
 				if (task.startTimestamp + task.period < time) {
 					task.run();
@@ -53,14 +71,22 @@ public:
 						errCode |= SCH_ERR_BAD_TEARDOWN;
 					}
 				}
-			} else if(task.type == TaskType::Repeat) {
+				continue;
+			}
+
+			// Tasks to be run repeatedly
+			if(task.type == TaskType::Repeat) {
 				const long timeSinceStart = ((long long)(time) - (long long)task.startTimestamp);
 				const long repeatIndex = timeSinceStart/(long long)task.period;
 				if (repeatIndex > task.lastIndex) {
 					task.lastIndex++;
 					task.run();
 				}
-			} else if(task.type == TaskType::RepeatUntil) {
+				continue;
+			} 
+			
+			// Tasks to be run until a certain time
+			if(task.type == TaskType::RepeatUntil) {
 				const long timeSinceStart = ((long long)(time) - (long long)task.startTimestamp);
 				const long repeatIndex = timeSinceStart/(long long)task.period;
 				// check if the task should be removed before executing it
@@ -78,15 +104,25 @@ public:
 					task.lastIndex++;
 					task.run();
 				}
-				
+				continue;
 			}
 			
+			// if the task type is not recognized, return an error
+			errCode |= SCH_ERR_UNRECOGNIZED_TASK_TYPE;
+			continue;
+
 		}
 		return errCode;
 	}
+
+	/// @brief Fetches the task hash for the task at the specified index.
+	/// @param i index of the task.
+	/// @return The task hash.
 	int getTaskHash(unsigned int i) {
 		return taskList[i].runCount*SCHEDULER_SIZE + i;
 	}
+
+	/// @brief Schedules a task to be run once.
 	int schedule(void (*func)(void), unsigned long startTimestamp) {
 		//Serial.println("schedule");
 		for(unsigned int i = 0; i< SCHEDULER_SIZE;i++) {
@@ -98,6 +134,8 @@ public:
 		// since there wasn't any space for the task, return an error
 		return -1;
 	}
+
+	/// @brief Schedules a task to be run once with data.
 	template <typename T>
 	int schedule(void (*func)(DataBuffer&), unsigned long startTimestamp, typename std::remove_reference<T>::type&& data) {
 		//Serial.println("schedule with moved data");
@@ -111,7 +149,7 @@ public:
 		return -1;
 	}
 
-	
+	/// @brief Schedules a task to be run once with data.
 	template <typename T>
 	int schedule(void (*func)(DataBuffer&), unsigned long startTimestamp, const typename std::remove_reference<T>::type& data) {
 		//Serial.println("schedule with copied data");
@@ -125,7 +163,7 @@ public:
 		return -1;
 	}
 	
-
+	/// @brief Clears all tasks, clearing the data and calling the teardown function in the process.
 	void clearTasks() {
 		for(unsigned int i = 0; i< SCHEDULER_SIZE; i++) {
 			taskList[i].clear();

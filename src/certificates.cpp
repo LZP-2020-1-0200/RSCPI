@@ -3,6 +3,7 @@
 #include <ESP8266mDNS.h>
 //#include <ArduinoJson.h>
 
+// These certificates were generated locally
 
 static const char serverCert[] PROGMEM = R"EOF(
 -----BEGIN CERTIFICATE-----
@@ -58,6 +59,8 @@ uaTIqStze2/J+jfmWmmzBEu0WMs=
 -----END PRIVATE KEY-----
 )EOF";
 
+/// @brief Set the server certificate and key.
+/// @param server the secure webserver reference.
 void setServerCertAndKey(BearSSL::ESP8266WebServerSecure &server) {
 	server.getServer().setRSACert(new BearSSL::X509List(serverCert), new BearSSL::PrivateKey(serverKey));
 }
